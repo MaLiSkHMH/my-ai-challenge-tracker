@@ -1,0 +1,1002 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f5ef">
+  <title>My AI Challenge Tracker</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #20302b;
+      --muted: #78827b;
+      --paper: #f7f5ef;
+      --card: #fffefa;
+      --line: #e9e7df;
+      --green: #355e4d;
+      --green-soft: #e8efe7;
+      --orange: #e69b68;
+      --shadow: 0 8px 26px rgb(45 57 47 / 5%);
+      font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(ellipse at 92% 3%, rgb(230 155 104 / 12%), transparent 25rem),
+        var(--paper);
+      color: var(--ink);
+    }
+
+    button, textarea { font: inherit; }
+
+    .page {
+      position: relative;
+      width: min(100% - 40px, 920px);
+      margin: 0 auto;
+      padding: 54px 0 64px;
+    }
+
+    .hero-die {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 66px;
+      height: 66px;
+      animation: hero-die-spin 7s linear infinite;
+      pointer-events: none;
+    }
+
+    .hero-die svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 4px 7px rgb(53 94 77 / 20%));
+      animation: hero-die-blink 1.8s ease-in-out infinite;
+    }
+
+    .recap-toggle {
+      position: absolute;
+      z-index: 1;
+      top: 35px;
+      right: 104px;
+      min-height: 34px;
+      padding: 0 13px;
+      border: 1px solid #d5e0d4;
+      border-radius: 999px;
+      background: var(--card);
+      color: var(--green);
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: .08em;
+      transition: background 150ms ease, border-color 150ms ease, transform 150ms ease;
+    }
+
+    .recap-toggle:hover {
+      transform: translateY(-1px);
+      border-color: #b7cbb7;
+      background: var(--green-soft);
+    }
+
+    .recap-toggle:focus-visible,
+    .recap-back:focus-visible {
+      outline: 3px solid rgb(86 131 106 / 35%);
+      outline-offset: 3px;
+    }
+
+    @keyframes hero-die-spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes hero-die-blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .58; }
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      margin: 0 0 17px;
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .brand-lockup {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 28px;
+      color: var(--green);
+    }
+
+    .brand-copy { display: grid; gap: 4px; }
+
+    .brand-icon { display: block; width: 43px; height: 43px; }
+
+    .brand-name {
+      font-size: 22px;
+      font-weight: 850;
+      letter-spacing: .12em;
+      line-height: 1;
+    }
+
+    .brand-byline {
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: .025em;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .eyebrow-mark {
+      display: inline-grid;
+      width: 25px;
+      height: 25px;
+      place-items: center;
+      border-radius: 8px;
+      background: var(--green-soft);
+      font-size: 14px;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      max-width: 620px;
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(38px, 7vw, 58px);
+      font-weight: 500;
+      letter-spacing: -.045em;
+      line-height: 1.05;
+    }
+
+    .intro {
+      margin: 15px 0 30px;
+      color: #68736b;
+      font-size: 16px;
+      line-height: 1.65;
+    }
+
+    .progress-card {
+      padding: 22px 24px 20px;
+      border: 1px solid rgb(53 94 77 / 8%);
+      border-radius: 17px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+    }
+
+    .progress-top {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 15px;
+    }
+
+    .progress-label {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .progress-count {
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .progress-track {
+      height: 9px;
+      overflow: hidden;
+      border-radius: 99px;
+      background: #edf0e9;
+    }
+
+    .progress-fill {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #56836a, #9bbd8c);
+      transition: width 300ms ease;
+    }
+
+    .progress-foot {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 11px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .recap-view[hidden],
+    .tracker-view[hidden] { display: none; }
+
+    .recap-view { margin-top: 37px; }
+
+    .recap-header { margin-bottom: 24px; }
+
+    .recap-kicker {
+      margin: 0 0 8px;
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .recap-title {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(30px, 5vw, 40px);
+      font-weight: 500;
+      letter-spacing: -.035em;
+    }
+
+    .recap-description {
+      margin: 9px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .recap-stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .recap-stat {
+      min-height: 116px;
+      padding: 18px 19px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+    }
+
+    .recap-stat-label {
+      margin: 0 0 9px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .recap-stat-value {
+      margin: 0;
+      color: var(--green);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 30px;
+      line-height: 1;
+    }
+
+    .recap-stat-note {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .recap-chart {
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+    }
+
+    .recap-chart-heading {
+      margin: 0 0 4px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 23px;
+      font-weight: 500;
+    }
+
+    .recap-chart-caption {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .recap-weeks {
+      display: grid;
+      gap: 10px;
+    }
+
+    .recap-week {
+      padding: 13px 14px;
+      border: 1px solid #efeee8;
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .recap-week-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .recap-week-name {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .recap-week-date {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .recap-week-status {
+      flex: 0 0 auto;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: #f2f1ed;
+      color: #777e77;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .recap-week-status.is-complete {
+      background: var(--green-soft);
+      color: var(--green);
+    }
+
+    .recap-score-line {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .recap-score-track {
+      flex: 1;
+      height: 7px;
+      overflow: hidden;
+      border-radius: 99px;
+      background: #edf0e9;
+    }
+
+    .recap-score-fill {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #56836a, #9bbd8c);
+      transition: width 250ms ease;
+    }
+
+    .recap-score-value {
+      min-width: 62px;
+      color: #59665d;
+      font-size: 11px;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .recap-note {
+      margin: 10px 0 0;
+      padding-top: 9px;
+      border-top: 1px solid #f0efe9;
+      color: #56645a;
+      font-size: 12px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .recap-back {
+      display: block;
+      margin: 20px auto 0;
+      padding: 10px 15px;
+      border: 0;
+      border-radius: 999px;
+      background: var(--green);
+      color: white;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 39px 2px 15px;
+    }
+
+    .section-heading h2 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 24px;
+      font-weight: 500;
+    }
+
+    .section-heading span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .weeks {
+      display: grid;
+      gap: 11px;
+    }
+
+    .week-card {
+      display: grid;
+      grid-template-columns: 48px minmax(0, 1fr);
+      gap: 15px;
+      padding: 19px 21px 17px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: var(--card);
+      box-shadow: 0 3px 14px rgb(45 57 47 / 2%);
+      transition: border-color 180ms ease, background 180ms ease, transform 180ms ease;
+    }
+
+    .week-card:hover { border-color: #d7dfd4; transform: translateY(-1px); }
+    .week-card.is-complete { border-color: #dbe6d8; background: #fbfcf8; }
+
+    .week-number {
+      display: grid;
+      width: 43px;
+      height: 43px;
+      place-items: center;
+      border: 1px solid #eeece4;
+      border-radius: 13px;
+      background: #f8f6f0;
+      color: #748075;
+      font-size: 12px;
+      font-weight: 750;
+      letter-spacing: .04em;
+    }
+
+    .week-card.is-complete .week-number {
+      border-color: transparent;
+      background: var(--green-soft);
+      color: var(--green);
+    }
+
+    .week-content { min-width: 0; }
+
+    .week-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      min-height: 43px;
+    }
+
+    .week-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 680;
+      letter-spacing: -.015em;
+    }
+
+    .week-dates {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .check-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 36px;
+      padding: 3px;
+      color: #657269;
+      cursor: pointer;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .check-label input {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      accent-color: var(--green);
+      cursor: pointer;
+    }
+
+    .rating {
+      margin: 13px 0 0;
+      padding: 0;
+      border: 0;
+    }
+
+    .rating legend {
+      margin-bottom: 7px;
+      padding: 0;
+      color: #657269;
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .rating-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .rating-option {
+      position: relative;
+      display: inline-flex;
+      cursor: pointer;
+    }
+
+    .rating-option input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      clip-path: inset(50%);
+    }
+
+    .die-face {
+      fill: #fff;
+      stroke: #dcded7;
+      stroke-width: 1.5;
+      transition: fill 150ms ease, stroke 150ms ease, transform 150ms ease;
+    }
+
+    .die-pip { fill: #34433a; }
+    .rating-option svg { display: block; width: 34px; height: 34px; }
+    .rating-option:hover svg { transform: translateY(-2px); }
+    .rating-option input:checked + svg .die-face { fill: var(--green); stroke: var(--green); }
+    .rating-option input:checked + svg .die-pip { fill: #fff; }
+    .rating-option input:focus-visible + svg { outline: 3px solid rgb(86 131 106 / 35%); outline-offset: 2px; border-radius: 11px; }
+
+    .notes {
+      display: block;
+      width: 100%;
+      min-height: 37px;
+      max-height: 150px;
+      margin-top: 10px;
+      padding: 9px 11px;
+      resize: vertical;
+      border: 1px solid #eeece5;
+      border-radius: 9px;
+      outline: none;
+      background: #fff;
+      color: var(--ink);
+      font-size: 13px;
+      line-height: 1.5;
+      transition: border-color 150ms ease, box-shadow 150ms ease;
+    }
+
+    .notes::placeholder { color: #9aa198; }
+    .notes:focus { border-color: #91ab91; box-shadow: 0 0 0 3px rgb(86 131 106 / 10%); }
+
+    .save-status {
+      min-height: 18px;
+      margin: 15px 3px 0;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: right;
+    }
+
+    .save-status[data-error="true"] { color: #a64e3c; }
+
+    .footer-note {
+      margin: 25px 0 0;
+      color: #879087;
+      font-size: 12px;
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    @media (max-width: 560px) {
+      .page { width: min(100% - 28px, 920px); padding-top: 36px; }
+      .hero-die { top: 8px; right: 4px; width: 48px; height: 48px; }
+      .recap-toggle { top: 15px; right: 76px; min-height: 30px; padding: 0 10px; font-size: 10px; }
+      .brand-icon { width: 38px; height: 38px; }
+      .brand-name { font-size: 19px; }
+      .intro { margin-bottom: 23px; font-size: 15px; }
+      .progress-card { padding: 18px 17px; }
+      .recap-stats { gap: 8px; }
+      .recap-stat { min-height: 105px; padding: 14px 11px; }
+      .recap-stat-label { min-height: 28px; font-size: 11px; }
+      .recap-stat-value { font-size: 25px; }
+      .recap-stat-note { font-size: 10px; }
+      .recap-chart { padding: 16px 12px; }
+      .week-card { grid-template-columns: 38px minmax(0, 1fr); gap: 11px; padding: 15px 13px 14px; }
+      .week-number { width: 36px; height: 36px; border-radius: 11px; font-size: 11px; }
+      .week-heading { min-height: 36px; gap: 8px; }
+      .week-title { font-size: 15px; }
+      .check-label { gap: 6px; font-size: 11px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+      .hero-die, .hero-die svg { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <div class="hero-die" aria-hidden="true">
+        <svg viewBox="0 0 64 64" focusable="false">
+          <defs>
+            <linearGradient id="hero-die-color" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#47745e"></stop>
+              <stop offset="1" stop-color="#294b3c"></stop>
+            </linearGradient>
+          </defs>
+          <rect x="3" y="3" width="58" height="58" rx="18" fill="url(#hero-die-color)"></rect>
+          <circle cx="21" cy="20" r="4.3" fill="#fffefa"></circle>
+          <circle cx="43" cy="20" r="4.3" fill="#fffefa"></circle>
+          <circle cx="21" cy="32" r="4.3" fill="#fffefa"></circle>
+          <circle cx="43" cy="32" r="4.3" fill="#fffefa"></circle>
+          <circle cx="21" cy="44" r="4.3" fill="#fffefa"></circle>
+          <circle cx="43" cy="44" r="4.3" fill="#fffefa"></circle>
+          <path d="m51 5 1.2 2.8L55 9l-2.8 1.2L51 13l-1.2-2.8L47 9l2.8-1.2z" fill="#e69b68"></path>
+        </svg>
+      </div>
+      <button class="recap-toggle" id="recap-toggle" type="button" aria-controls="recap-view tracker-view" aria-label="Open challenge recap">
+        <span id="recap-toggle-label">RECAP</span>
+      </button>
+      <div class="brand-lockup">
+        <svg class="brand-icon" viewBox="0 0 56 56" aria-hidden="true" focusable="false">
+          <rect x="1" y="1" width="54" height="54" rx="17" fill="#355e4d"></rect>
+          <path d="M14 39V18l14 13 14-13v21" fill="none" stroke="#fffefa" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"></path>
+          <path d="m44 5 1.5 3.5L49 10l-3.5 1.5L44 15l-1.5-3.5L39 10l3.5-1.5z" fill="#e69b68"></path>
+        </svg>
+        <span class="brand-copy">
+          <span class="brand-name">MALISK</span>
+          <span class="brand-byline">MAy-LInn SKjervedal</span>
+        </span>
+      </div>
+      <p class="eyebrow"><span class="eyebrow-mark" aria-hidden="true">✳</span> Your learning journey</p>
+      <h1>My AI Challenge Tracker</h1>
+      <p class="intro">One week at a time. Keep track of what you’ve learned, jot down ideas, and celebrate every step forward.</p>
+    </header>
+
+    <div class="tracker-view" id="tracker-view">
+      <section class="progress-card" aria-labelledby="progress-label">
+        <div class="progress-top">
+          <h2 class="progress-label" id="progress-label">Your progress</h2>
+          <span class="progress-count" id="progress-count">0 of 11 weeks</span>
+        </div>
+        <div
+          class="progress-track"
+          id="progress-track"
+          role="progressbar"
+          aria-label="Challenge progress"
+          aria-valuemin="0"
+          aria-valuemax="11"
+          aria-valuenow="0"
+        >
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <div class="progress-foot">
+          <span id="progress-message">A fresh start — you’ve got this!</span>
+          <span id="progress-percent">0%</span>
+        </div>
+      </section>
+
+      <section aria-labelledby="weeks-heading">
+        <div class="section-heading">
+          <h2 id="weeks-heading">The 11-week challenge</h2>
+          <span>Check off a week when you’re ready</span>
+        </div>
+        <div class="weeks" id="weeks"></div>
+      </section>
+
+      <p class="save-status" id="save-status" role="status" aria-live="polite">Your progress saves automatically in this browser.</p>
+      <p class="footer-note">Your notes and progress stay on this device in this browser.</p>
+    </div>
+
+    <section class="recap-view" id="recap-view" aria-labelledby="recap-title" hidden>
+      <header class="recap-header">
+        <p class="recap-kicker">Your learning journey</p>
+        <h2 class="recap-title" id="recap-title">Challenge recap</h2>
+        <p class="recap-description">A week-by-week look at what you’ve completed, rated, and noted so far.</p>
+      </header>
+      <div class="recap-stats" aria-label="Challenge summary">
+        <article class="recap-stat">
+          <p class="recap-stat-label">Weeks completed</p>
+          <p class="recap-stat-value" id="recap-completed">0 / 11</p>
+          <p class="recap-stat-note" id="recap-completed-note">0% of the challenge</p>
+        </article>
+        <article class="recap-stat">
+          <p class="recap-stat-label">Average rating</p>
+          <p class="recap-stat-value" id="recap-average">—</p>
+          <p class="recap-stat-note" id="recap-average-note">No ratings yet</p>
+        </article>
+        <article class="recap-stat">
+          <p class="recap-stat-label">Top rating</p>
+          <p class="recap-stat-value" id="recap-top-rating">—</p>
+          <p class="recap-stat-note">Your highest weekly score</p>
+        </article>
+      </div>
+      <section class="recap-chart" aria-labelledby="recap-chart-title">
+        <h3 class="recap-chart-heading" id="recap-chart-title">Week by week</h3>
+        <p class="recap-chart-caption">Completion status, self-rating, and notes for every week.</p>
+        <div class="recap-weeks" id="recap-weeks"></div>
+      </section>
+      <button class="recap-back" id="recap-back" type="button">Back to challenge</button>
+    </section>
+  </main>
+
+  <script>
+    const weeks = [
+      { title: "Challenge Tracker", dates: "16.nov - 22.nov" },
+      { title: "Context Engineering", dates: "23.nov - 29.nov" },
+      { title: "Models & Harnesses", dates: "30.nov - 6.des" },
+      { title: "Deep Research", dates: "7.des - 13.des" },
+      { title: "Spreadsheet AI", dates: "14.des - 20.des" },
+      { title: "Data Pipelines", dates: "21.des - 27.des" },
+      { title: "Live Data & MCP", dates: "28.des - 3.jan" },
+      { title: "One Agent One Job", dates: "4.jan - 10.jan" },
+      { title: "Agent Teams", dates: "11.jan - 17.jan" },
+      { title: "Advanced App", dates: "18.jan - 25.jan" },
+      { title: "Capstone", dates: "26.jan - 31.jan" }
+    ];
+    const diePips = {
+      1: [[24, 24]],
+      2: [[15, 15], [33, 33]],
+      3: [[15, 15], [24, 24], [33, 33]],
+      4: [[15, 15], [33, 15], [15, 33], [33, 33]],
+      5: [[15, 15], [33, 15], [24, 24], [15, 33], [33, 33]],
+      6: [[15, 13], [33, 13], [15, 24], [33, 24], [15, 35], [33, 35]]
+    };
+    const storageKey = "my-ai-challenge-tracker-v1";
+    const progress = weeks.map(() => ({ complete: false, notes: "", rating: null }));
+    const weekList = document.getElementById("weeks");
+    const saveStatus = document.getElementById("save-status");
+
+    function renderRating(index) {
+      return `
+        <fieldset class="rating">
+          <legend>Your rating</legend>
+          <div class="rating-options">
+            ${Object.entries(diePips).map(([score, pips]) => `
+              <label class="rating-option">
+                <input type="radio" name="rating-${index}" value="${score}" data-rating="${index}" aria-label="Week ${index + 1} score ${score}">
+                <svg viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+                  <rect class="die-face" x="2" y="2" width="44" height="44" rx="10"></rect>
+                  ${pips.map(([x, y]) => `<circle class="die-pip" cx="${x}" cy="${y}" r="3.2"></circle>`).join("")}
+                </svg>
+              </label>
+            `).join("")}
+          </div>
+        </fieldset>
+      `;
+    }
+
+    function renderWeeks() {
+      weekList.innerHTML = weeks.map((week, index) => `
+        <article class="week-card" data-week="${index}">
+          <div class="week-number" aria-hidden="true">${String(index + 1).padStart(2, "0")}</div>
+          <div class="week-content">
+            <div class="week-heading">
+              <div>
+                <h3 class="week-title">${week.title}</h3>
+                <p class="week-dates">${week.dates}</p>
+              </div>
+              <label class="check-label">
+                <input type="checkbox" data-complete="${index}" aria-label="Mark week ${index + 1}: ${week.title} complete">
+                <span>Complete</span>
+              </label>
+            </div>
+            ${renderRating(index)}
+            <textarea class="notes" data-notes="${index}" rows="1" aria-label="Notes for week ${index + 1}: ${week.title}" placeholder="Add a note, takeaway, or idea…"></textarea>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function renderRecap() {
+      const completed = progress.filter(week => week.complete).length;
+      const ratedWeeks = progress.filter(week => week.rating !== null);
+      const average = ratedWeeks.length
+        ? ratedWeeks.reduce((total, week) => total + week.rating, 0) / ratedWeeks.length
+        : null;
+      const topRating = ratedWeeks.length
+        ? Math.max(...ratedWeeks.map(week => week.rating))
+        : null;
+      const percent = Math.round(completed / weeks.length * 100);
+
+      document.getElementById("recap-completed").textContent = `${completed} / ${weeks.length}`;
+      document.getElementById("recap-completed-note").textContent = `${percent}% of the challenge`;
+      document.getElementById("recap-average").textContent = average === null ? "—" : `${average.toFixed(1)} / 6`;
+      document.getElementById("recap-average-note").textContent = ratedWeeks.length
+        ? `Across ${ratedWeeks.length} rated ${ratedWeeks.length === 1 ? "week" : "weeks"}`
+        : "No ratings yet";
+      document.getElementById("recap-top-rating").textContent = topRating === null ? "—" : `${topRating} / 6`;
+
+      const recapWeeks = document.getElementById("recap-weeks");
+      recapWeeks.replaceChildren();
+
+      weeks.forEach((week, index) => {
+        const entry = progress[index];
+        const card = document.createElement("article");
+        card.className = "recap-week";
+
+        const top = document.createElement("div");
+        top.className = "recap-week-top";
+
+        const titleGroup = document.createElement("div");
+        const title = document.createElement("h4");
+        title.className = "recap-week-name";
+        title.textContent = `Week ${index + 1} · ${week.title}`;
+        const date = document.createElement("p");
+        date.className = "recap-week-date";
+        date.textContent = week.dates;
+        titleGroup.append(title, date);
+
+        const status = document.createElement("span");
+        status.className = "recap-week-status";
+        if (entry.complete) {
+          status.textContent = "Complete";
+          status.classList.add("is-complete");
+        } else {
+          status.textContent = entry.notes.trim() || entry.rating !== null ? "In progress" : "Not started";
+        }
+        top.append(titleGroup, status);
+        card.append(top);
+
+        const scoreLine = document.createElement("div");
+        scoreLine.className = "recap-score-line";
+        const scoreTrack = document.createElement("div");
+        scoreTrack.className = "recap-score-track";
+        scoreTrack.setAttribute("role", "img");
+        scoreTrack.setAttribute(
+          "aria-label",
+          entry.rating === null ? `Week ${index + 1} has no rating` : `Week ${index + 1} rating: ${entry.rating} out of 6`
+        );
+        const scoreFill = document.createElement("div");
+        scoreFill.className = "recap-score-fill";
+        scoreFill.style.width = entry.rating === null ? "0%" : `${entry.rating / 6 * 100}%`;
+        scoreTrack.append(scoreFill);
+
+        const scoreValue = document.createElement("span");
+        scoreValue.className = "recap-score-value";
+        scoreValue.textContent = entry.rating === null ? "Not rated" : `${entry.rating} / 6`;
+        scoreLine.append(scoreTrack, scoreValue);
+        card.append(scoreLine);
+
+        if (entry.notes.trim()) {
+          const note = document.createElement("p");
+          note.className = "recap-note";
+          note.textContent = entry.notes;
+          card.append(note);
+        }
+
+        recapWeeks.append(card);
+      });
+    }
+
+    function updateProgress() {
+      const completed = progress.filter(week => week.complete).length;
+      const percent = Math.round(completed / weeks.length * 100);
+      document.getElementById("progress-count").textContent = `${completed} of ${weeks.length} weeks`;
+      document.getElementById("progress-percent").textContent = `${percent}%`;
+      document.getElementById("progress-fill").style.width = `${percent}%`;
+      const track = document.getElementById("progress-track");
+      track.setAttribute("aria-valuenow", completed);
+
+      const message = completed === weeks.length
+        ? "Challenge complete — amazing work!"
+        : completed === 0
+          ? "A fresh start — you’ve got this!"
+          : `${weeks.length - completed} ${weeks.length - completed === 1 ? "week" : "weeks"} to go — keep it up!`;
+      document.getElementById("progress-message").textContent = message;
+
+      progress.forEach((week, index) => {
+        const card = weekList.querySelector(`[data-week="${index}"]`);
+        card.classList.toggle("is-complete", week.complete);
+        card.querySelector(`[data-complete="${index}"]`).checked = week.complete;
+      });
+      renderRecap();
+    }
+
+    function saveProgress() {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(progress));
+        saveStatus.textContent = "Saved just now";
+        saveStatus.dataset.error = "false";
+      } catch (error) {
+        saveStatus.textContent = "Couldn’t save in this browser. Your changes may not persist.";
+        saveStatus.dataset.error = "true";
+        console.error("Unable to save challenge progress:", error);
+      }
+    }
+
+    function loadProgress() {
+      try {
+        const saved = localStorage.getItem(storageKey);
+        if (saved === null) return;
+
+        const parsed = JSON.parse(saved);
+        if (!Array.isArray(parsed) || parsed.length !== weeks.length) {
+          throw new Error("Saved challenge data has an unexpected format.");
+        }
+
+        parsed.forEach((item, index) => {
+          if (item && typeof item.complete === "boolean" && typeof item.notes === "string") {
+            const rating = Number.isInteger(item.rating) && item.rating >= 1 && item.rating <= 6
+              ? item.rating
+              : null;
+            progress[index] = { complete: item.complete, notes: item.notes, rating };
+          }
+        });
+      } catch (error) {
+        saveStatus.textContent = "Couldn’t load saved progress. Your current changes can still be saved.";
+        saveStatus.dataset.error = "true";
+        console.error("Unable to load challenge progress:", error);
+      }
+    }
+
+    renderWeeks();
+    loadProgress();
+    progress.forEach((week, index) => {
+      weekList.querySelector(`[data-complete="${index}"]`).checked = week.complete;
+      weekList.querySelector(`[data-notes="${index}"]`).value = week.notes;
+      if (week.rating !== null) {
+        weekList.querySelector(`[data-rating="${index}"][value="${week.rating}"]`).checked = true;
+      }
+    });
+    updateProgress();
+
+    weekList.addEventListener("change", event => {
+      const checkbox = event.target.closest("[data-complete]");
+      if (checkbox) {
+        const index = Number(checkbox.dataset.complete);
+        progress[index].complete = checkbox.checked;
+        updateProgress();
+        saveProgress();
+        return;
+      }
+
+      const rating = event.target.closest("[data-rating]");
+      if (!rating) return;
+      progress[Number(rating.dataset.rating)].rating = Number(rating.value);
+      renderRecap();
+      saveProgress();
+    });
+
+    weekList.addEventListener("input", event => {
+      const notes = event.target.closest("[data-notes]");
+      if (!notes) return;
+      progress[Number(notes.dataset.notes)].notes = notes.value;
+      renderRecap();
+      saveProgress();
+    });
+
+    function showView(showRecap) {
+      document.getElementById("tracker-view").hidden = showRecap;
+      document.getElementById("recap-view").hidden = !showRecap;
+      document.getElementById("recap-toggle-label").textContent = showRecap ? "TRACKER" : "RECAP";
+      document.getElementById("recap-toggle").setAttribute(
+        "aria-label",
+        showRecap ? "Return to challenge tracker" : "Open challenge recap"
+      );
+      if (showRecap) renderRecap();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    document.getElementById("recap-toggle").addEventListener("click", () => {
+      showView(document.getElementById("recap-view").hidden);
+    });
+    document.getElementById("recap-back").addEventListener("click", () => showView(false));
+  </script>
+</body>
+</html>
