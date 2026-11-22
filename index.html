@@ -601,6 +601,25 @@
       text-align: center;
     }
 
+    .reset-progress {
+      display: block;
+      margin: 14px auto 0;
+      padding: 8px 12px;
+      border: 1px solid #d7ded5;
+      border-radius: 999px;
+      background: transparent;
+      color: #657269;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .reset-progress:hover {
+      border-color: #9daf9c;
+      color: var(--green);
+      background: var(--green-soft);
+    }
+
     @media (max-width: 560px) {
       .page { width: min(100% - 28px, 920px); padding-top: 36px; }
       .hero-die { top: 8px; right: 4px; width: 48px; height: 48px; }
@@ -701,6 +720,7 @@
 
       <p class="save-status" id="save-status" role="status" aria-live="polite">Your progress saves automatically in this browser.</p>
       <p class="footer-note">Your notes and progress stay on this device in this browser.</p>
+      <button class="reset-progress" id="reset-progress" type="button">Reset progress</button>
     </div>
 
     <section class="recap-view" id="recap-view" aria-labelledby="recap-title" hidden>
@@ -931,12 +951,14 @@
         }
 
         parsed.forEach((item, index) => {
-          if (item && typeof item.complete === "boolean" && typeof item.notes === "string") {
-            const rating = Number.isInteger(item.rating) && item.rating >= 1 && item.rating <= 6
-              ? item.rating
-              : null;
-            progress[index] = { complete: item.complete, notes: item.notes, rating };
-          }
+          if (!item || typeof item !== "object") return;
+
+          const complete = typeof item.complete === "boolean" ? item.complete : false;
+          const notes = typeof item.notes === "string" ? item.notes : "";
+          const rating = Number.isInteger(item.rating) && item.rating >= 1 && item.rating <= 6
+            ? item.rating
+            : null;
+          progress[index] = { complete, notes, rating };
         });
       } catch (error) {
         saveStatus.textContent = "Couldn’t load saved progress. Your current changes can still be saved.";
@@ -997,6 +1019,27 @@
       showView(document.getElementById("recap-view").hidden);
     });
     document.getElementById("recap-back").addEventListener("click", () => showView(false));
+    document.getElementById("reset-progress").addEventListener("click", () => {
+      if (!window.confirm("Reset every completed week, rating and comment?")) return;
+
+      progress.forEach((week) => {
+        week.complete = false;
+        week.notes = "";
+        week.rating = null;
+      });
+      localStorage.removeItem(storageKey);
+
+      progress.forEach((week, index) => {
+        weekList.querySelector(`[data-complete="${index}"]`).checked = false;
+        weekList.querySelector(`[data-notes="${index}"]`).value = "";
+        weekList.querySelectorAll(`[data-rating="${index}"]`).forEach((input) => {
+          input.checked = false;
+        });
+      });
+      updateProgress();
+      saveStatus.textContent = "Progress reset";
+      saveStatus.dataset.error = "false";
+    });
   </script>
 </body>
 </html>
